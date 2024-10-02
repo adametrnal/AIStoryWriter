@@ -29,6 +29,8 @@ const characters: Character[] = [
   { id: '4', name: 'Robot', image: require('../../assets/images/robot.png') },
   { id: '5', name: 'Pirate', image: require('../../assets/images/pirate.png') },
   { id: '6', name: 'Puppy', image: require('../../assets/images/puppy.png') },
+  { id: '7', name: 'Octopus', image: require('../../assets/images/octopus.png') },
+  { id: '8', name: 'Wizard', image: require('../../assets/images/wizard.png') },
   // Add more characters...
 ];
 
@@ -215,26 +217,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: 30,
   },
   characterItem: {
-    width: '30%',
+    width: '21%',
     alignItems: 'center',
-    marginBottom: 15,
-    padding: 10,
+    marginBottom: 10,
+    padding: 0,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
+    aspectRatio: 1,
   },
   selectedCharacter: {
     backgroundColor: '#e0e0e0',
   },
   characterImage: {
-    width: 60,
-    height: 60,
+    width: '100%',
+    height: 70,
     marginBottom: 5,
   },
   characterName: {
     textAlign: 'center',
+    paddingBottom: 5
   },
   continueButton: {
     backgroundColor: '#007AFF',
