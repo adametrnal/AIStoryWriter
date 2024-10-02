@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import axios  from 'axios';
+import Constants from 'expo-constants';
 
 //Images for Age Selection
 const ageRangeIcons = {
@@ -12,22 +14,32 @@ const ageRangeIcons = {
 
 // Define types
 type AgeRange = 'Baby' | 'Toddler' | 'Young Reader' | 'Advanced Reader';
+const ageRangeMapping: Record<AgeRange, string> = {
+    'Baby': 'Focus on simple, repetitive language with familiar objects like animals, colors, and basic emotions (happy, sad). Keep the tone soothing and the story no longer than a few sentences per chapter.',
+    'Toddler': 'Use simple language but introduce slightly more complex ideas like curiosity, friendship, and problem-solving. Use familiar settings and playful characters. Chapters should be short with some gentle excitement or discoveries.',
+    'Young Reader': 'Introduce slightly more developed plotlines and challenges. Use adventure, exploration, and basic conflicts with resolutions. The story can include a few paragraphs per chapter and involve character development and teamwork.',
+    'Advanced Reader': 'Focus on more complex plots with emotional depth, longer chapters, and character growth. Include adventure, learning, problem-solving, and more detailed world-building. Suitable for readers beginning to enjoy longer, more nuanced stories.',
+}
 type Character = { id: string; name: string; image: any };
 
-// Mock data for characters (replace with your actual data)
-// const characters: Character[] = [
-//   { id: '1', name: 'Princess', image: require('../assets/characters/princess.png') },
-//   { id: '2', name: 'Knight', image: require('../assets/characters/knight.png') },
-//   // Add more characters...
-// ];
+const characters: Character[] = [
+  { id: '1', name: 'Princess', image: require('../../assets/images/princess.png') },
+  { id: '2', name: 'Knight', image: require('../../assets/images/knight.png') },
+  { id: '3', name: 'Elephant', image: require('../../assets/images/elephant.png') },
+  { id: '4', name: 'Robot', image: require('../../assets/images/robot.png') },
+  { id: '5', name: 'Pirate', image: require('../../assets/images/pirate.png') },
+  { id: '6', name: 'Puppy', image: require('../../assets/images/puppy.png') },
+  // Add more characters...
+];
 
 
 
 const Home: React.FC = () => {
   const [characterName, setCharacterName] = useState('');
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
-  //TODO: hardcoding character for now. Delete this later
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>({ id: '1', name: 'Princess', image: require('../../assets/images/baby_icon.png') });
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const openaiApiKey = Constants.expoConfig?.extra?.openaiApiKey;
 
 
   const handleContinue = async () => {
@@ -36,20 +48,44 @@ const Home: React.FC = () => {
       return;
     }
 
-    try {
-      // Call your backend API here
-      // const response = await fetch('your-api-endpoint', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ characterName, selectedAgeRange, selectedCharacter }),
-      // });
-      // const data = await response.json();
+    setIsLoading(true);
 
-      // For now, let's just simulate a successful response
-    //   router.push('/story/generate');
+    const userPrompt = `The character name is a ${characterName}, the type of character is a ${selectedCharacter.name}.`;
+    console.log('The user prompt is: ', userPrompt);
+    //TODO: move the actual openAI calls to the server.
+    try {
+       const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful assistant that generates stories for children.
+            Your job is to generate a story for the user, one chapter at a time. The user will click a button to generate the next chapter. 
+            Please be creative and engaging, and follow these guidelines: ${ageRangeMapping[selectedAgeRange]}.`,
+          },
+          {
+            role: 'user',
+            content: `${userPrompt}`,
+          },
+        ]}, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${openaiApiKey}`
+            }
+        }
+       )
+
+       const generatedStory = response.data.choices[0].message.content;
+       console.log(generatedStory);     
+       router.push({
+        pathname: '/story',
+        params: { story: generatedStory }
+       });
     } catch (error) {
       console.error('Error generating story:', error);
       alert('Failed to generate story. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -92,24 +128,24 @@ const Home: React.FC = () => {
       </View>
 
       <Text style={styles.label}>Select a Character</Text>
-      {/* <View style={styles.characterGrid}>
+      <View style={styles.characterGrid}>
         {characters.map((character) => (
           <TouchableOpacity
             key={character.id}
             style={[
               styles.characterItem,
-              selectedCharacter === character.id && styles.selectedCharacter,
+              selectedCharacter?.id === character.id && styles.selectedCharacter,
             ]}
-            onPress={() => setSelectedCharacter(character.id)}
+            onPress={() => setSelectedCharacter(character)}
           >
             <Image source={character.image} style={styles.characterImage} />
             <Text style={styles.characterName}>{character.name}</Text>
           </TouchableOpacity>
         ))}
-      </View> */}
+      </View>
 
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueButtonText}>Continue</Text>
+      <TouchableOpacity style={styles.continueButton} onPress={handleContinue} disabled={isLoading}>
+        <Text style={styles.continueButtonText}>{isLoading ? 'Creating...' : 'Continue'} </Text>
       </TouchableOpacity>
     </ScrollView>
   );
