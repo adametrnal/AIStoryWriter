@@ -81,7 +81,12 @@ const Home: React.FC = () => {
        console.log(generatedStory);     
        router.push({
         pathname: '/story',
-        params: { story: generatedStory }
+        params: { 
+            story: generatedStory,
+            characterName: characterName,
+            ageRange: selectedAgeRange,
+            character: selectedCharacter.name
+        }
        });
     } catch (error) {
       console.error('Error generating story:', error);
