@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { useStory } from '../../context/StoryContext';
+import { saveChapter } from '../../utils/storage';
 
 const StoryResult: React.FC = () => {
   const params = useLocalSearchParams<{ 
@@ -18,17 +19,37 @@ const StoryResult: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const currentStory = stories.find(story => story.id === params.storyId);
+  const currentChapterNumber = parseInt(params.chapterNumber);
   const currentChapter = currentStory?.chapters.find(
-    ch => ch.number === parseInt(params.chapterNumber)
+    ch => ch.number === currentChapterNumber
   );
 
+  const isLastChapter = currentStory
+    ? currentChapterNumber === currentStory.chapters.length
+    : true;
+
   const openaiApiKey = Constants.expoConfig?.extra?.openaiApiKey;
+
+  const handleNextChapterAction = async () => {
+    if (isLastChapter) {
+      await generateNextChapter();
+    } else {
+      // Navigate to next existing chapter
+      router.push({
+        pathname: '/story',
+        params: {
+          ...params,
+          chapterNumber: currentChapterNumber + 1
+        }
+      });
+    }
+  };
 
   const generateNextChapter = async () => {
     if (!currentStory) return;
 
     setIsLoading(true);
-    const nextChapterNumber = parseInt(params.chapterNumber) + 1;
+    const nextChapterNumber = currentChapterNumber+ 1;
 
     try {
       const response = await axios.post('https://api.openai.com/v1/chat/completions', {
@@ -60,6 +81,8 @@ const StoryResult: React.FC = () => {
       };
 
       addChapterToStory(params.storyId, newChapter);
+      await saveChapter(params.storyId, newChapter);
+
       router.push({
         pathname: '/story',
         params: {
@@ -89,11 +112,15 @@ const StoryResult: React.FC = () => {
       <Text style={styles.storyText}>{currentChapter?.content}</Text>
       <TouchableOpacity 
         style={styles.generateButton} 
-        onPress={generateNextChapter}
+        onPress={handleNextChapterAction}
         disabled={isLoading}
       >
         <Text style={styles.generateButtonText}>
-          {isLoading ? 'Generating...' : 'Generate Next Chapter'}
+          {isLoading ? 
+          'Writing...' 
+          : isLastChapter 
+            ? 'Write Next Chapter'
+            : 'Read Next Chapter'}
         </Text>
       </TouchableOpacity>
     </ScrollView>
