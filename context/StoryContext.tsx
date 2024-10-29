@@ -1,17 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
-
-type Chapter= {
-    content: string;
-    number: number;
-}
-
-type Story = {
-    id: string;
-    characterName: string;
-    characterType: string;
-    ageRange: string;
-    chapters: Chapter[];
-}
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { Story, Chapter } from "../types/story";
+import { getStories, saveStory } from '../utils/storage';
 
 type StoryContextType = {
     stories: Story[];
@@ -19,16 +8,34 @@ type StoryContextType = {
     addChapterToStory: (storyId:string, chapter: Chapter) => void;
     currentStory: Story | null;
     setCurrentStory: (story: Story | null) => void;
+    refreshStories: () => Promise<void>;
 }
-const StoryContext = createContext<StoryContextType | undefined>(undefined);
+const StoryContext = createContext<StoryContextType>({
+    stories: [],
+    addStory: () => {},
+    addChapterToStory: () => {},
+    currentStory: null,
+    setCurrentStory: () => {},
+    refreshStories: async () => {}
+})
 
 export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [stories, setStories] = useState<Story[]>([]);
     const [currentStory, setCurrentStory] = useState<Story | null>(null);
 
+
+    useEffect(() => {
+        refreshStories();
+    }, []);
+
     const addStory = (story: Story) => {
         setStories(prev => [...prev, story]);
         setCurrentStory(story);
+    };
+
+    const refreshStories = async () => {
+        const loadedStories = await getStories();
+        setStories(loadedStories);
     };
 
     const addChapterToStory = (storyId: string, chapter: Chapter) => {
@@ -52,6 +59,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              addStory, 
              addChapterToStory,
              currentStory,
+             refreshStories,
              setCurrentStory }}>
             {children}
         </StoryContext.Provider>

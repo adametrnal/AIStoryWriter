@@ -5,6 +5,8 @@ import axios  from 'axios';
 import Constants from 'expo-constants';
 import { useStory } from '../../context/StoryContext';
 import { randomUUID } from 'expo-crypto';
+import { saveStory } from '../../utils/storage';
+import { Story } from '../../types/story';
 
 //Images for Age Selection
 const ageRangeIcons = {
@@ -44,7 +46,9 @@ const Home: React.FC = () => {
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
   const openaiApiKey = Constants.expoConfig?.extra?.openaiApiKey;
+
 
 
   const handleContinue = async () => {
@@ -83,7 +87,7 @@ const Home: React.FC = () => {
        const generatedStory = response.data.choices[0].message.content;
        console.log(generatedStory);    
        
-       const newStory = {
+       const newStory:Story = {
         id: randomUUID(),
         characterName: characterName,
         characterType: selectedCharacter.name,
@@ -92,8 +96,11 @@ const Home: React.FC = () => {
           content: generatedStory,
           number: 1
         }],
+        createdAt: Date.now()
       };
       addStory(newStory);
+
+      await saveStory(newStory);
 
       router.push({
         pathname: '/story',
