@@ -129,6 +129,9 @@ const Home: React.FC = () => {
         onChangeText={setCharacterName}
         placeholder="Enter character name"
         placeholderTextColor="#c0c0c0"
+        autoComplete="off"
+        keyboardType='default'
+        autoCapitalize='words'
       />
 
       <Text style={styles.label}>Age Range</Text>
