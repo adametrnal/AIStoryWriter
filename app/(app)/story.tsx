@@ -28,8 +28,6 @@ const StoryResult: React.FC = () => {
     ? currentChapterNumber === currentStory.chapters.length
     : true;
 
-  const openaiApiKey = Constants.expoConfig?.extra?.openaiApiKey;
-
   const handleNextChapterAction = async () => {
     if (isLastChapter) {
       await generateNextChapter();
@@ -52,31 +50,27 @@ const StoryResult: React.FC = () => {
     const nextChapterNumber = currentChapterNumber+ 1;
 
     try {
-      const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a helpful assistant that generates stories for children. 
-            Your job is to generate the next chapter of an ongoing story. 
-            Please be creative and engaging, and follow these guidelines for ${params.ageRange} readers.`,
-          },
-          {
-            role: 'user',
-            content: `The character name is ${params.characterName}, the type of character is ${params.characterType}. 
-            This is the story so far: ${currentStory?.chapters.map(ch => ch.content).join('\n\n')}
-            Please generate Chapter ${nextChapterNumber}, continuing the story. Make sure to only return one chapter at a time.`,
-          },
-        ]
-      }, {
+      const requestBody = {
+        characterName: params.characterName,
+        characterType: params.characterType,
+        ageRange: params.ageRange,
+        previousChapters: currentStory.chapters.map(ch => ch.content),
+        nextChapterNumber
+      };
+
+      const fullURL = `${Constants.expoConfig?.extra?.functionsUrl}generate-chapter`;
+
+      const response = await axios.post(fullURL, requestBody, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${openaiApiKey}`
+          'Authorization': `Bearer ${Constants.expoConfig?.extra?.publicSupabaseAnonKey}`
         }
       });
+            
+      const { content } = await response.data;
 
       const newChapter = {
-        content: response.data.choices[0].message.content,
+        content: content,
         number: nextChapterNumber
       };
 

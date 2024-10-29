@@ -18,12 +18,7 @@ const ageRangeIcons = {
 
 // Define types
 type AgeRange = 'Baby' | 'Toddler' | 'Young Reader' | 'Advanced Reader';
-const ageRangeMapping: Record<AgeRange, string> = {
-    'Baby': 'Focus on simple, repetitive language with familiar objects like animals, colors, and basic emotions (happy, sad). Keep the tone soothing and the story no longer than a few sentences per chapter. Only use one simple word per sentence for example: Run spot run.',
-    'Toddler': 'Use simple language but introduce slightly more complex ideas like curiosity, friendship, and problem-solving. Use familiar settings and playful characters. Chapters should be short with some gentle excitement or discoveries. Keep the tone soothing and the story no longer than 4-6 sentences per chapter. It should be appropriate for a 3 year old child.',
-    'Young Reader': 'Introduce slightly more developed plotlines and challenges. Use adventure, exploration, and basic conflicts with resolutions. The story can include a few paragraphs per chapter and involve character development and teamwork.',
-    'Advanced Reader': 'Focus on more complex plots with emotional depth, longer chapters, and character growth. Include adventure, learning, problem-solving, and more detailed world-building. Suitable for readers beginning to enjoy longer, more nuanced stories.',
-}
+
 type Character = { id: string; name: string; image: any };
 
 const characters: Character[] = [
@@ -38,19 +33,13 @@ const characters: Character[] = [
   // Add more characters...
 ];
 
-
-
 const Home: React.FC = () => {
   const { addStory } = useStory();
   const [characterName, setCharacterName] = useState('');
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const openaiApiKey = Constants.expoConfig?.extra?.openaiApiKey;
-
-
-
+  
   const handleContinue = async () => {
     if (!characterName || !selectedAgeRange || !selectedCharacter) {
       alert('Please fill in all fields');
@@ -59,41 +48,32 @@ const Home: React.FC = () => {
 
     setIsLoading(true);
 
-    const userPrompt = `The character name is a ${characterName}, the type of character is a ${selectedCharacter.name}.`;
-    console.log('The user prompt is: ', userPrompt);
-    //TODO: move the actual openAI calls to the server.
     try {
-       const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a helpful assistant that generates stories for children.
-            Your job is to generate a story for the user, one chapter at a time. The user will click a button to generate the next chapter. 
-            Please be creative and engaging, and follow these guidelines: ${ageRangeMapping[selectedAgeRange]}.`,
-          },
-          {
-            role: 'user',
-            content: `${userPrompt}`,
-          },
-        ]}, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${openaiApiKey}`
-            }
-        }
-       )
 
-       const generatedStory = response.data.choices[0].message.content;
-       console.log(generatedStory);    
-       
-       const newStory:Story = {
+      const requestBody = {
+        characterName,
+        characterType: selectedCharacter.name,
+        ageRange: selectedAgeRange
+      };
+
+      const fullURL = `${Constants.expoConfig?.extra?.functionsUrl}generate-story`;
+
+      const response = await axios.post(fullURL, requestBody, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Constants.expoConfig?.extra?.publicSupabaseAnonKey}`
+        }
+      });
+            
+      const { content } = await response.data;
+              
+      const newStory:Story = {
         id: randomUUID(),
         characterName: characterName,
         characterType: selectedCharacter.name,
         ageRange: selectedAgeRange,
         chapters: [{
-          content: generatedStory,
+          content: content,
           number: 1
         }],
         createdAt: Date.now()
@@ -112,8 +92,7 @@ const Home: React.FC = () => {
             character: selectedCharacter.name,
             characterType: selectedCharacter.name
         }
-       });
-
+      });
        
     } catch (error) {
       console.error('Error generating story:', error);
