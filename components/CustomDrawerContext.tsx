@@ -2,12 +2,25 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useStory } from '../context/StoryContext';
-import { router } from 'expo-router';
+import { router, useGlobalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export function CustomDrawerContent(props: any) {
   const { stories } = useStory();
   const [expandedStories, setExpandedStories] = useState<Record<string, boolean>>({});
+
+  const params = useGlobalSearchParams();
+  const currentStoryId = params.storyId as string;
+  const currentChapter = params.chapterNumber as string;
+
+  React.useEffect(() => {
+    if (currentStoryId) {
+      setExpandedStories(prev => ({
+        ...prev,
+        [currentStoryId]: true
+      }));
+    }
+  }, [currentStoryId]);
 
   const toggleStoryExpanded = (storyId: string) => {
     setExpandedStories(prev => ({
@@ -62,10 +75,21 @@ export function CustomDrawerContent(props: any) {
           {expandedStories[story.id] && story.chapters.map((chapter) => (
             <TouchableOpacity
               key={chapter.number}
-              style={styles.chapterItem}
+              style={[
+                styles.chapterItem,
+                currentStoryId === story.id &&
+                Number(currentChapter) === chapter.number &&
+                styles.activeChapter
+              ]}
               onPress={() => navigateToChapter(story, chapter.number)}
             >
-              <Text style={styles.chapterText}>Chapter {chapter.number}</Text>
+              <Text style={[
+                styles.chapterText,
+                currentStoryId === story.id &&
+                Number(currentChapter) === chapter.number &&
+                styles.activeChapterText
+              ]}
+            >Chapter {chapter.number}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -109,5 +133,12 @@ const styles = StyleSheet.create({
   },
   chapterText: {
     color: '#666',
+  },
+  activeChapter: {
+    backgroundColor: '#007AFF22',
+  },
+  activeChapterText: {
+    color: '#007AFF',
+    fontWeight: 'bold',
   },
 });
