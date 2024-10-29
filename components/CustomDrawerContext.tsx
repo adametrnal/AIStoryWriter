@@ -33,6 +33,9 @@ export function CustomDrawerContent(props: any) {
     router.push('/home');
   };
 
+  const sortedStories = stories
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   return (
     <DrawerContentScrollView {...props}>
       <TouchableOpacity 
@@ -42,7 +45,7 @@ export function CustomDrawerContent(props: any) {
         <Text style={styles.createNewText}>Create New Story</Text>
       </TouchableOpacity>
 
-      {stories.map((story) => (
+      {sortedStories.map((story) => (
         <View key={story.id} style={styles.storyContainer}>
           <TouchableOpacity 
             style={styles.storyHeader}
