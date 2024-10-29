@@ -44,12 +44,18 @@ export default function RootLayout() {
         }}
       >
         <Drawer.Screen
-          name="(app)"
+          name="(app)/home"
           options={{
-            headerTitle: "Story Time",
-            drawerLabel: "Home",
-            drawerItemStyle: { display: 'none' } // Hide the (app) route
+            title: "Create New Story",
           }}
+        />
+        <Drawer.Screen
+          name="(app)/story"
+          options={({ route }: { route?: { params?: { characterName?: string; chapterNumber?: number } } }) => ({
+            title: route?.params?.characterName 
+              ? `${route.params.characterName}'s Story - Chapter ${route.params.chapterNumber}`
+              : 'Story',
+          })}
         />
       </Drawer>
       </StoryProvider>
