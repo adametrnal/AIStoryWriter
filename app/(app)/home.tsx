@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet 
 import { router } from 'expo-router';
 import axios  from 'axios';
 import Constants from 'expo-constants';
+import { useStory } from '../../context/StoryContext';
+import { randomUUID } from 'expo-crypto';
 
 //Images for Age Selection
 const ageRangeIcons = {
@@ -15,8 +17,8 @@ const ageRangeIcons = {
 // Define types
 type AgeRange = 'Baby' | 'Toddler' | 'Young Reader' | 'Advanced Reader';
 const ageRangeMapping: Record<AgeRange, string> = {
-    'Baby': 'Focus on simple, repetitive language with familiar objects like animals, colors, and basic emotions (happy, sad). Keep the tone soothing and the story no longer than a few sentences per chapter.',
-    'Toddler': 'Use simple language but introduce slightly more complex ideas like curiosity, friendship, and problem-solving. Use familiar settings and playful characters. Chapters should be short with some gentle excitement or discoveries.',
+    'Baby': 'Focus on simple, repetitive language with familiar objects like animals, colors, and basic emotions (happy, sad). Keep the tone soothing and the story no longer than a few sentences per chapter. Only use one simple word per sentence for example: Run spot run.',
+    'Toddler': 'Use simple language but introduce slightly more complex ideas like curiosity, friendship, and problem-solving. Use familiar settings and playful characters. Chapters should be short with some gentle excitement or discoveries. Keep the tone soothing and the story no longer than 4-6 sentences per chapter. It should be appropriate for a 3 year old child.',
     'Young Reader': 'Introduce slightly more developed plotlines and challenges. Use adventure, exploration, and basic conflicts with resolutions. The story can include a few paragraphs per chapter and involve character development and teamwork.',
     'Advanced Reader': 'Focus on more complex plots with emotional depth, longer chapters, and character growth. Include adventure, learning, problem-solving, and more detailed world-building. Suitable for readers beginning to enjoy longer, more nuanced stories.',
 }
@@ -37,6 +39,7 @@ const characters: Character[] = [
 
 
 const Home: React.FC = () => {
+  const { addStory } = useStory();
   const [characterName, setCharacterName] = useState('');
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
@@ -78,22 +81,41 @@ const Home: React.FC = () => {
        )
 
        const generatedStory = response.data.choices[0].message.content;
-       console.log(generatedStory);     
-       router.push({
+       console.log(generatedStory);    
+       
+       const newStory = {
+        id: randomUUID(),
+        characterName: characterName,
+        characterType: selectedCharacter.name,
+        ageRange: selectedAgeRange,
+        chapters: [{
+          content: generatedStory,
+          number: 1
+        }],
+      };
+      addStory(newStory);
+
+      router.push({
         pathname: '/story',
         params: { 
-            story: generatedStory,
+            storyId: newStory.id,
+            chapterNumber: 1,
             characterName: characterName,
             ageRange: selectedAgeRange,
-            character: selectedCharacter.name
+            character: selectedCharacter.name,
+            characterType: selectedCharacter.name
         }
        });
+
+       
     } catch (error) {
       console.error('Error generating story:', error);
       alert('Failed to generate story. Please try again.');
     } finally {
       setIsLoading(false);
     }
+
+    
   };
 
   return (

@@ -1,11 +1,15 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
+import { CustomDrawerContent } from '../components/CustomDrawerContext';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { StoryProvider } from '../context/StoryContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -28,10 +32,27 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <StoryProvider>
+      <Drawer
+        drawerContent={(props) => <CustomDrawerContent {...props} />}
+        screenOptions={{
+          headerShown: true,
+          drawerStyle: {
+            backgroundColor: '#fff',
+            width: 280,
+          },
+        }}
+      >
+        <Drawer.Screen
+          name="(app)"
+          options={{
+            headerTitle: "Story Time",
+            drawerLabel: "Home",
+            drawerItemStyle: { display: 'none' } // Hide the (app) route
+          }}
+        />
+      </Drawer>
+      </StoryProvider>
     </ThemeProvider>
   );
 }
