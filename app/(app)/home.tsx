@@ -49,7 +49,10 @@ const Home: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const storyId = randomUUID();
+
       const requestBody = {
+        storyId,
         characterName,
         characterType: selectedCharacter.name,
         ageRange: selectedAgeRange
@@ -64,10 +67,10 @@ const Home: React.FC = () => {
         }
       });
             
-      const { storyName, chapterTitle, content } = await response.data;
+      const { storyName, chapterTitle, content, illustrationUrl } = await response.data;
               
       const newStory:Story = {
-        id: randomUUID(),
+        id: storyId,
         title: storyName,
         characterName: characterName,
         characterType: selectedCharacter.name,
@@ -75,7 +78,8 @@ const Home: React.FC = () => {
         chapters: [{
           content: content,
           number: 1,
-          title: chapterTitle
+          title: chapterTitle,
+          illustrationUrl: illustrationUrl
         }],
         createdAt: Date.now()
       };

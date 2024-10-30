@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useRef,useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import Constants from 'expo-constants';
@@ -7,6 +7,7 @@ import { useStory } from '../../context/StoryContext';
 import { saveChapter } from '../../utils/storage';
 
 const StoryResult: React.FC = () => {
+  const scrollViewRef = useRef<ScrollView>(null);
   const params = useLocalSearchParams<{ 
     storyId: string, 
     chapterNumber: string, 
@@ -27,6 +28,10 @@ const StoryResult: React.FC = () => {
   const isLastChapter = currentStory
     ? currentChapterNumber === currentStory.chapters.length
     : true;
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  }, [currentChapter]);
 
   const handleNextChapterAction = async () => {
     if (isLastChapter) {
@@ -55,7 +60,8 @@ const StoryResult: React.FC = () => {
         characterType: params.characterType,
         ageRange: params.ageRange,
         previousChapters: currentStory.chapters.map(ch => ch.content),
-        nextChapterNumber
+        nextChapterNumber,
+        storyId: params.storyId
       };
 
       const fullURL = `${Constants.expoConfig?.extra?.functionsUrl}generate-chapter`;
@@ -67,14 +73,14 @@ const StoryResult: React.FC = () => {
         }
       });
             
-      const { content, chapterTitle } = await response.data;
+      const { content, chapterTitle, illustrationUrl } = await response.data;
 
       const newChapter = {
         content: content,
         number: nextChapterNumber,
-        title: chapterTitle
+        title: chapterTitle,
+        illustrationUrl: illustrationUrl
       };
-
       addChapterToStory(params.storyId, newChapter);
       await saveChapter(params.storyId, newChapter);
 
@@ -102,7 +108,8 @@ const StoryResult: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} ref={scrollViewRef}>
+      <Image source={{ uri: currentChapter?.illustrationUrl }} style={styles.illustration} />
       <Text style={styles.storyText}>{currentChapter?.content}</Text>
       <TouchableOpacity 
         style={styles.generateButton} 
@@ -152,6 +159,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  illustration: {
+    width: '100%',
+    aspectRatio: 1,
+    marginBottom: 20,
+    borderRadius: 8
+  }
 });
 
 export default StoryResult;

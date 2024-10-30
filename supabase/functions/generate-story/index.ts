@@ -2,10 +2,13 @@
 // https://deno.land/manual/getting_started/setup_your_environment
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { generateIllustrationUrl } from "../_shared/generate-illustration.ts"
+import { ageRangeMapping } from "../_shared/age-range-mapping.ts"
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 
 interface RequestBody {
+  storyId: string;
   characterName: string;
   characterType: string;
   ageRange: string;
@@ -15,14 +18,9 @@ interface ResponseBody {
   storyName: string;
   chapterTitle: string;
   content: string;
+  illustrationUrl: string;
 }
 
-const ageRangeMapping: Record<string, string> = {
-  'Baby': 'Focus on simple, repetitive language with familiar objects like animals, colors, and basic emotions (happy, sad). Keep the tone soothing and the story no longer than a few sentences per chapter. Only use one simple word per sentence for example: Run spot run.',
-  'Toddler': 'Use simple language but introduce slightly more complex ideas like curiosity, friendship, and problem-solving. Use familiar settings and playful characters. Chapters should be short with some gentle excitement or discoveries. Keep the tone soothing and the story no longer than 4-6 sentences per chapter. It should be appropriate for a 3 year old child.',
-  'Young Reader': 'Introduce slightly more developed plotlines and challenges. Use adventure, exploration, and basic conflicts with resolutions. The story can include a few paragraphs per chapter and involve character development and teamwork.',
-  'Advanced Reader': 'Focus on more complex plots with emotional depth, longer chapters, and character growth. Include adventure, learning, problem-solving, and more detailed world-building. Suitable for readers beginning to enjoy longer, more nuanced stories.',
-}
 
 const isValidStoryResponse = (data: any): data is ResponseBody => {
   return (
@@ -42,7 +40,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { characterName, characterType, ageRange } = await req.json() as RequestBody
+    const { characterName, characterType, ageRange, storyId } = await req.json() as RequestBody
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -84,7 +82,13 @@ Deno.serve(async (req) => {
         throw new Error('Invalid story response format')
       }
 
-      return new Response(JSON.stringify(parsedStory), {
+      const illustrationUrl = await generateIllustrationUrl(parsedStory.content, 1, storyId);
+
+      const storyWithIllustration = {
+        ...parsedStory,
+        illustrationUrl: illustrationUrl
+      }
+      return new Response(JSON.stringify(storyWithIllustration), {
         headers: { 'Content-Type': 'application/json' }
       })
     } catch (error) {

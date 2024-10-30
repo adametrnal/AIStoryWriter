@@ -1,0 +1,7 @@
+export const ageRangeMapping: Record<string, string> = {
+    'Baby': 'Focus on simple, repetitive language with familiar objects like animals, colors, and basic emotions (happy, sad). Keep the tone soothing and the story no longer than a few sentences per chapter. Only use one simple word per sentence for example: Run spot run.',
+    'Toddler': 'Use simple language but introduce slightly more complex ideas like curiosity, friendship, and problem-solving. Use familiar settings and playful characters. Chapters should be short with some gentle excitement or discoveries. Keep the tone soothing and the story no longer than 4-6 sentences per chapter. It should be appropriate for a 3 year old child.',
+    'Young Reader': 'Introduce slightly more developed plotlines and challenges. Use adventure, exploration, and basic conflicts with resolutions. The story can include a few paragraphs per chapter and involve character development and teamwork.',
+    'Advanced Reader': 'Focus on more complex plots with emotional depth, longer chapters, and character growth. Include adventure, learning, problem-solving, and more detailed world-building. Suitable for readers beginning to enjoy longer, more nuanced stories.',
+  }
+  

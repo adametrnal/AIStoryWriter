@@ -12,4 +12,5 @@ export interface Story {
     content: string;
     number: number;
     title: string;
+    illustrationUrl: string;
   }

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Story } from '../types/story';
+import { Story, Chapter } from '../types/story';
 
 const STORAGE_KEY = 'user_stories';
 
@@ -16,7 +16,7 @@ export const saveStory = async (story: Story) => {
     }
 }
 
-export const saveChapter = async (storyId: string, chapter: { content: string, number: number, title: string }) => {
+export const saveChapter = async (storyId: string, chapter: Chapter) => {
     try {
         const existingStoriesJSON = await AsyncStorage.getItem(STORAGE_KEY);
         const existingStories: Story[] = existingStoriesJSON ? JSON.parse(existingStoriesJSON) : [];
@@ -40,6 +40,8 @@ export const saveChapter = async (storyId: string, chapter: { content: string, n
 }
 
 export const getStories = async (): Promise<Story[]> => {
+    //HACK: 
+    //AsyncStorage.clear();
     try {
         const storiesJSON = await AsyncStorage.getItem(STORAGE_KEY);
         return storiesJSON ? JSON.parse(storiesJSON) : [];
