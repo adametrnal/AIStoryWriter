@@ -37,7 +37,8 @@ export function CustomDrawerContent(props: any) {
         chapterNumber,
         characterName: story.characterName,
         ageRange: story.ageRange,
-        characterType: story.characterType
+        characterType: story.characterType,
+        title: story.title
       }
     });
   };
@@ -64,7 +65,7 @@ export function CustomDrawerContent(props: any) {
             style={styles.storyHeader}
             onPress={() => toggleStoryExpanded(story.id)}
           >
-            <Text style={styles.storyTitle}>{story.characterName}'s Story</Text>
+            <Text style={styles.storyTitle}>{story.title || `${story.characterName}'s Story`}</Text>
             <Ionicons 
               name={expandedStories[story.id] ? 'chevron-down' : 'chevron-forward'} 
               size={20} 
@@ -89,7 +90,7 @@ export function CustomDrawerContent(props: any) {
                 Number(currentChapter) === chapter.number &&
                 styles.activeChapterText
               ]}
-            >Chapter {chapter.number}</Text>
+            >{`${chapter.number}. ${chapter.title}` || `Chapter ${chapter.number}`}</Text>
             </TouchableOpacity>
           ))}
         </View>

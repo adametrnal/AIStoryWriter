@@ -67,11 +67,12 @@ const StoryResult: React.FC = () => {
         }
       });
             
-      const { content } = await response.data;
+      const { content, chapterTitle } = await response.data;
 
       const newChapter = {
         content: content,
-        number: nextChapterNumber
+        number: nextChapterNumber,
+        title: chapterTitle
       };
 
       addChapterToStory(params.storyId, newChapter);
@@ -102,7 +103,6 @@ const StoryResult: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Chapter {params.chapterNumber}</Text>
       <Text style={styles.storyText}>{currentChapter?.content}</Text>
       <TouchableOpacity 
         style={styles.generateButton} 
@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 100
   },
   generateButtonText: {
     color: 'white',

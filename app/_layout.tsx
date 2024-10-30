@@ -51,11 +51,15 @@ export default function RootLayout() {
         />
         <Drawer.Screen
           name="(app)/story"
-          options={({ route }: { route?: { params?: { characterName?: string; chapterNumber?: number } } }) => ({
-            title: route?.params?.characterName 
+          options={({ route }: { route?: { params?: { title?: string; characterName?: string; chapterNumber?: number } } }) => {
+            return {
+              title: route?.params?.title
+                ? `${route.params.title}`
+                : route?.params?.characterName 
               ? `${route.params.characterName}'s Story - Chapter ${route.params.chapterNumber}`
               : 'Story',
-          })}
+            };
+          }}
         />
       </Drawer>
       </StoryProvider>

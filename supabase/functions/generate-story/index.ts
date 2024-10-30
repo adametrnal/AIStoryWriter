@@ -11,12 +11,27 @@ interface RequestBody {
   ageRange: string;
 }
 
+interface ResponseBody {
+  storyName: string;
+  chapterTitle: string;
+  content: string;
+}
+
 const ageRangeMapping: Record<string, string> = {
   'Baby': 'Focus on simple, repetitive language with familiar objects like animals, colors, and basic emotions (happy, sad). Keep the tone soothing and the story no longer than a few sentences per chapter. Only use one simple word per sentence for example: Run spot run.',
   'Toddler': 'Use simple language but introduce slightly more complex ideas like curiosity, friendship, and problem-solving. Use familiar settings and playful characters. Chapters should be short with some gentle excitement or discoveries. Keep the tone soothing and the story no longer than 4-6 sentences per chapter. It should be appropriate for a 3 year old child.',
   'Young Reader': 'Introduce slightly more developed plotlines and challenges. Use adventure, exploration, and basic conflicts with resolutions. The story can include a few paragraphs per chapter and involve character development and teamwork.',
   'Advanced Reader': 'Focus on more complex plots with emotional depth, longer chapters, and character growth. Include adventure, learning, problem-solving, and more detailed world-building. Suitable for readers beginning to enjoy longer, more nuanced stories.',
 }
+
+const isValidStoryResponse = (data: any): data is ResponseBody => {
+  return (
+    typeof data === 'object' &&
+    typeof data.storyName === 'string' &&
+    typeof data.chapterTitle === 'string' &&
+    typeof data.content === 'string'
+  );
+};
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -36,13 +51,20 @@ Deno.serve(async (req) => {
         'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
+        response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
-            content: `You are a helpful assistant that generates stories for children.
-            Your job is to generate a story for the user, one chapter at a time. The user will click a button to generate the next chapter. 
-            Please be creative and engaging, and follow these guidelines: ${ageRangeMapping[ageRange]}.`,
+            content: `You are a helpful assistant that writes wonderful stories for children.
+            Your job is to write a story for the user, one chapter at a time. The user will click a button to generate the next chapter. 
+            Please be creative and engaging, and follow these guidelines: ${ageRangeMapping[ageRange]}.
+            IMPORTANT: You must respond with valid JSON in the following format:
+            {
+              storyName: "The title of the complete story",
+              chapterTitle: "The title of the first chapter",
+              content: "The content of the first chapter"
+            }`,
           },
           {
             role: 'user',
@@ -53,9 +75,24 @@ Deno.serve(async (req) => {
     })
 
     const data = await response.json()
-    return new Response(JSON.stringify({ content: data.choices[0].message.content }), {
-      headers: { 'Content-Type': 'application/json' }
-    })
+    const message = data.choices[0].message.content
+
+    try {
+      const parsedStory = JSON.parse(message)
+      
+      if (!isValidStoryResponse(parsedStory)) {
+        throw new Error('Invalid story response format')
+      }
+
+      return new Response(JSON.stringify(parsedStory), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: 'Failed to parse story response' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {

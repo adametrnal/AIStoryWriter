@@ -16,7 +16,7 @@ export const saveStory = async (story: Story) => {
     }
 }
 
-export const saveChapter = async (storyId: string, chapter: { content: string, number: number }) => {
+export const saveChapter = async (storyId: string, chapter: { content: string, number: number, title: string }) => {
     try {
         const existingStoriesJSON = await AsyncStorage.getItem(STORAGE_KEY);
         const existingStories: Story[] = existingStoriesJSON ? JSON.parse(existingStoriesJSON) : [];

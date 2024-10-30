@@ -10,6 +10,19 @@ interface RequestBody {
   nextChapterNumber: number;
 }
 
+interface ResponseBody {
+  chapterTitle: string;
+  content: string;
+}
+
+const isValidChapterResponse = (data: any): data is ResponseBody => {
+  return (
+    typeof data === 'object' &&
+    typeof data.chapterTitle === 'string' &&
+    typeof data.content === 'string'
+  );
+};
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -28,28 +41,58 @@ Deno.serve(async (req) => {
         'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
+        response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
-            content: `You are a helpful assistant that generates stories for children. 
-            Your job is to generate the next chapter of an ongoing story. 
-            Please be creative and engaging, and follow these guidelines for ${ageRange} readers.`,
+            content: `You are a helpful assistant that writes wonderful stories for children. 
+            Your job is to write the next chapter of an ongoing story. 
+            Please be creative and engaging, and follow these guidelines for ${ageRange} readers.
+            IMPORTANT: You must respond with valid JSON in the following format:
+            {
+              chapterTitle: "The title of this chapter",
+              content: "The content of this chapter"
+            }`,
           },
           {
             role: 'user',
             content: `The character name is ${characterName}, the type of character is ${characterType}. 
             This is the story so far: ${previousChapters.join('\n\n')}
-            Please generate Chapter ${nextChapterNumber}, continuing the story. Make sure to only return one chapter at a time.`,
+            Please generate Chapter ${nextChapterNumber}, continuing the story.`,
           },
+          {
+            role: 'system',
+            content: `IMPORTANT: You must respond with valid JSON using exactly this format:
+            {
+              chapterTitle: "The title of this chapter",
+              content: "The content of this chapter"
+            }
+            Do not include any other text or explanation outside of this JSON structure.`,
+          }
         ]
       })
     })
 
     const data = await response.json()
-    return new Response(JSON.stringify({ content: data.choices[0].message.content }), {
-      headers: { 'Content-Type': 'application/json' }
-    })
+    const message = data.choices[0].message.content
+
+    try {
+      const parsedChapter = JSON.parse(message)
+      
+      if (!isValidChapterResponse(parsedChapter)) {
+        console.log('Invalid chapter response format')
+        throw new Error('Invalid chapter response format')
+      }
+      return new Response(JSON.stringify(parsedChapter), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: 'Failed to parse story response' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {

@@ -4,10 +4,12 @@ export interface Story {
     characterType: string;
     ageRange: string;
     createdAt: number;
+    title: string;
     chapters: Chapter[];
   }
 
   export interface Chapter {
     content: string;
     number: number;
+    title: string;
   }
