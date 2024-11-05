@@ -10,10 +10,10 @@ import { Story } from '../../types/story';
 
 //Images for Age Selection
 const ageRangeIcons = {
-    'Baby': require('../../assets/images/baby_icon.png'),
-    'Toddler': require('../../assets/images/toddler.png'),
-    'Young Reader': require('../../assets/images/young_reader.png'),
-    'Advanced Reader': require('../../assets/images/advanced_reader.png'),
+    'Baby': require('../../assets/images/age_range/baby_icon.png'),
+    'Toddler': require('../../assets/images/age_range/toddler.png'),
+    'Young Reader': require('../../assets/images/age_range/young_reader.png'),
+    'Advanced Reader': require('../../assets/images/age_range/advanced_reader.png'),
 }
 
 // Define types
@@ -22,26 +22,51 @@ type AgeRange = 'Baby' | 'Toddler' | 'Young Reader' | 'Advanced Reader';
 type Character = { id: string; name: string; image: any };
 
 const characters: Character[] = [
-  { id: '1', name: 'Princess', image: require('../../assets/images/princess.png') },
-  { id: '2', name: 'Knight', image: require('../../assets/images/knight.png') },
-  { id: '3', name: 'Elephant', image: require('../../assets/images/elephant.png') },
-  { id: '4', name: 'Robot', image: require('../../assets/images/robot.png') },
-  { id: '5', name: 'Pirate', image: require('../../assets/images/pirate.png') },
-  { id: '6', name: 'Puppy', image: require('../../assets/images/puppy.png') },
-  { id: '7', name: 'Octopus', image: require('../../assets/images/octopus.png') },
-  { id: '8', name: 'Wizard', image: require('../../assets/images/wizard.png') },
+  { id: '1', name: 'Princess', image: require('../../assets/images/characters/princess.png') },
+  { id: '2', name: 'Knight', image: require('../../assets/images/characters/knight.png') },
+  { id: '3', name: 'Elephant', image: require('../../assets/images/characters/elephant.png') },
+  { id: '4', name: 'Robot', image: require('../../assets/images/characters/robot.png') },
+  { id: '5', name: 'Pirate', image: require('../../assets/images/characters/pirate.png') },
+  { id: '6', name: 'Puppy', image: require('../../assets/images/characters/puppy.png') },
+  { id: '7', name: 'Octopus', image: require('../../assets/images/characters/octopus.png') },
+  { id: '8', name: 'Wizard', image: require('../../assets/images/characters/wizard.png') },
   // Add more characters...
+];
+
+type Descriptor = { id: string; name: string; image: any };
+
+const descriptors: Descriptor[] = [
+  { id: '1', name: 'Miniature', image: require('../../assets/images/descriptors/miniature.png') },
+  { id: '2', name: 'Giant', image: require('../../assets/images/descriptors/giant.png') },
+  { id: '3', name: 'Turbo', image: require('../../assets/images/descriptors/turbo.png') },
+  { id: '4', name: 'Lazy', image: require('../../assets/images/descriptors/lazy.png') },
+]
+
+type Genre = { id: string; name: string; image: any };
+
+const genres: Genre[] = [
+  { id: '1', name: 'Fantasy', image: require('../../assets/images/genres/fantasy.png') },
+  { id: '2', name: 'Adventure', image: require('../../assets/images/genres/adventure.png') },
+  { id: '3', name: 'Mystery', image: require('../../assets/images/genres/mystery.png') },
+  { id: '4', name: 'Sci-Fi', image: require('../../assets/images/genres/sci-fi.png') },
+  { id: '5', name: 'Thriller', image: require('../../assets/images/genres/thriller.png') },
+  { id: '6', name: 'Comedy', image: require('../../assets/images/genres/comedy.png') },
+  { id: '7', name: 'Non-fiction', image: require('../../assets/images/genres/non-fiction.png') },
+  { id: '8', name: 'Fairytale', image: require('../../assets/images/genres/fairytale.png') },
+  // Add more genres...
 ];
 
 const Home: React.FC = () => {
   const { addStory } = useStory();
   const [characterName, setCharacterName] = useState('');
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null); 
+  const [selectedDescriptor, setSelectedDescriptor] = useState<Descriptor | null>(null);
+  const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const handleContinue = async () => {
-    if (!characterName || !selectedAgeRange || !selectedCharacter) {
+    if (!characterName || !selectedAgeRange || !selectedCharacter || !selectedGenre || !selectedDescriptor) {
       alert('Please fill in all fields');
       return;
     }
@@ -55,7 +80,9 @@ const Home: React.FC = () => {
         storyId,
         characterName,
         characterType: selectedCharacter.name,
-        ageRange: selectedAgeRange
+        ageRange: selectedAgeRange,
+        genre: selectedGenre.name,
+        descriptor: selectedDescriptor.name
       };
 
       const fullURL = `${Constants.expoConfig?.extra?.functionsUrl}generate-story`;
@@ -75,6 +102,8 @@ const Home: React.FC = () => {
         characterName: characterName,
         characterType: selectedCharacter.name,
         ageRange: selectedAgeRange,
+        genre: selectedGenre.name,
+        descriptor: selectedDescriptor.name,
         chapters: [{
           content: content,
           number: 1,
@@ -96,6 +125,8 @@ const Home: React.FC = () => {
             ageRange: selectedAgeRange,
             character: selectedCharacter.name,
             characterType: selectedCharacter.name,
+            genre: selectedGenre.name,
+            descriptor: selectedDescriptor.name,
             title: storyName
         }
       });
@@ -168,6 +199,40 @@ const Home: React.FC = () => {
         ))}
       </View>
 
+      <Text style={styles.label}>Describe your character</Text>
+      <View style={styles.characterGrid}>
+        {descriptors.map((descriptor) => (
+          <TouchableOpacity
+            key={descriptor.id}
+            style={[
+              styles.descriptorItem,
+              selectedDescriptor?.id === descriptor.id && styles.selectedDescriptor,
+            ]}
+            onPress={() => setSelectedDescriptor(descriptor)}
+          >
+            <Image source={descriptor.image} style={styles.descriptorImage} />
+            <Text style={styles.descriptorName}>{descriptor.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.label}>Select a Genre</Text>
+      <View style={styles.characterGrid}>
+        {genres.map((genre) => (
+          <TouchableOpacity
+            key={genre.id}
+            style={[
+              styles.genreItem,
+              selectedGenre?.id === genre.id && styles.selectedGenre,
+            ]}
+            onPress={() => setSelectedGenre(genre)}
+          >
+            <Image source={genre.image} style={styles.genreImage} />
+            <Text style={styles.genreName}>{genre.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue} disabled={isLoading}>
         <Text style={styles.continueButtonText}>{isLoading ? 'Creating...' : 'Continue'} </Text>
       </TouchableOpacity>
@@ -184,13 +249,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 10,
     color: 'black',
   },
   label: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 15,
+    marginTop: 35,
     marginBottom: 10,
     color: 'black',
   },
@@ -206,7 +271,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    marginBottom: 50,
+    marginBottom: 40,
   },
   ageRangeButton: {
     alignItems: 'center',
@@ -263,12 +328,57 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingBottom: 5
   },
+  descriptorItem: {
+    width: '21%',
+    alignItems: 'center',
+    marginBottom: 10,
+    padding: 0,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    aspectRatio: 1,
+  },
+  selectedDescriptor: {
+    backgroundColor: '#e0e0e0',
+  },
+  descriptorImage: {
+    width: '100%',
+    height: 70,
+    marginBottom: 5,
+  },
+  descriptorName: {
+    textAlign: 'center',
+    paddingBottom: 5
+  },
+  genreItem: {
+    width: '21%',
+    alignItems: 'center',
+    marginBottom: 10,
+    padding: 0,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    aspectRatio: 1,
+  },
+  selectedGenre: {
+    backgroundColor: '#e0e0e0',
+  },
+  genreImage: {
+    width: '100%',
+    height: 70,
+    marginBottom: 5,
+  },
+  genreName: {
+    textAlign: 'center',
+    paddingBottom: 5,
+  },
   continueButton: {
     backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 60,
+    marginBottom: 400,
   },
   continueButtonText: {
     color: 'white',

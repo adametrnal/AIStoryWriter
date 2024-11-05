@@ -12,6 +12,8 @@ interface RequestBody {
   characterName: string;
   characterType: string;
   ageRange: string;
+  genre: string;
+  descriptor: string;
 }
 
 interface ResponseBody {
@@ -40,7 +42,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { characterName, characterType, ageRange, storyId } = await req.json() as RequestBody
+    const { characterName, characterType, ageRange, storyId, genre, descriptor } = await req.json() as RequestBody
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -66,7 +68,8 @@ Deno.serve(async (req) => {
           },
           {
             role: 'user',
-            content: `The character name is a ${characterName}, the type of character is a ${characterType}.`,
+            content: `The character name is a ${characterName}, the type of character is a ${characterType}. 
+            The defining characteristic of the character is that it is ${descriptor}. The genre of the story is ${genre}.`,
           },
         ]
       })

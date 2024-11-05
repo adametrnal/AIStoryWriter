@@ -50,7 +50,7 @@ export const generateIllustrationUrl = async (prompt: string, chapterNumber: num
           //TODO: Figure out why supabase URL is kong:8000
         const storageUrl = signedUrl?.signedUrl.replace(
           'http://kong:8000',
-          'http://192.168.50.244:54321'
+          'http://192.168.50.241:54321'
         );
     
         return storageUrl;
