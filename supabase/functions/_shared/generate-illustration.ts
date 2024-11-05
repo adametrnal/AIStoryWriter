@@ -11,13 +11,15 @@ const replicate = new Replicate({
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-export const generateIllustrationUrl = async (prompt: string, chapterNumber: number, storyId: string) => {
+export const generateIllustrationUrl = async (prompt: string, chapterNumber: number, storyId: string, characterDescription: string) => {
     const modelName = "black-forest-labs/flux-schnell";
     
+    const basePrompt = "A beauitufl, hand-painted illustration for a children's story book, whimsical and colorful, suitable for young readers. IMPORTANT: There is no text in the image. ";
+    const characterPrompt = characterDescription ? `The main character looks like: ${characterDescription}. ` : '';
     const input = {
-      prompt: prompt,
+      prompt: basePrompt + characterPrompt + prompt,
     }
-
+    console.log("generateIllustrationInput", input);
     const output = await replicate.run(modelName, { input });
   
     try {

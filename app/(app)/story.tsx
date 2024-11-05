@@ -59,6 +59,7 @@ const StoryResult: React.FC = () => {
         characterName: params.characterName,
         characterType: params.characterType,
         ageRange: params.ageRange,
+        characterDescription: currentChapter?.characterDescription,
         previousChapters: currentStory.chapters.map(ch => ch.content),
         nextChapterNumber,
         storyId: params.storyId
@@ -73,13 +74,14 @@ const StoryResult: React.FC = () => {
         }
       });
             
-      const { content, chapterTitle, illustrationUrl } = await response.data;
+      const { content, chapterTitle, illustrationUrl, characterDescription } = await response.data;
 
       const newChapter = {
         content: content,
         number: nextChapterNumber,
         title: chapterTitle,
-        illustrationUrl: illustrationUrl
+        illustrationUrl: illustrationUrl,
+        characterDescription: characterDescription
       };
       addChapterToStory(params.storyId, newChapter);
       await saveChapter(params.storyId, newChapter);

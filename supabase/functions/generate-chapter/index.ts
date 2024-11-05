@@ -2,13 +2,13 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { generateIllustrationUrl } from "../_shared/generate-illustration.ts"
 import { ageRangeMapping } from "../_shared/age-range-mapping.ts"
 
-
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 
 interface RequestBody {
   characterName: string;
   characterType: string;
   ageRange: string;
+  characterDescription: string;
   storyId: string;
   previousChapters: string[];
   nextChapterNumber: number;
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { characterName, characterType, ageRange, storyId, previousChapters, nextChapterNumber } = await req.json() as RequestBody
+    const { characterName, characterType, ageRange, characterDescription, storyId, previousChapters, nextChapterNumber } = await req.json() as RequestBody
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -89,10 +89,12 @@ Deno.serve(async (req) => {
         console.log('Invalid chapter response format')
         throw new Error('Invalid chapter response format')
       }
-      const illustrationUrl = await generateIllustrationUrl(parsedChapter.content, nextChapterNumber, storyId);
+
+      const illustrationUrl = await generateIllustrationUrl(parsedChapter.content, nextChapterNumber, storyId, characterDescription);
       const chapterWithIllustration = {
         ...parsedChapter,
-        illustrationUrl: illustrationUrl
+        illustrationUrl: illustrationUrl,
+        characterDescription: characterDescription
       }
       return new Response(JSON.stringify(chapterWithIllustration), {
         headers: { 'Content-Type': 'application/json' }

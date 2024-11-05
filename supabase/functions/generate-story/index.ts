@@ -4,6 +4,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { generateIllustrationUrl } from "../_shared/generate-illustration.ts"
 import { ageRangeMapping } from "../_shared/age-range-mapping.ts"
+import { getCharacterDescription } from "../_shared/generate-character-description.ts"
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
 
@@ -20,6 +21,7 @@ interface ResponseBody {
   storyName: string;
   chapterTitle: string;
   content: string;
+  characterDescription: string;
   illustrationUrl: string;
 }
 
@@ -29,7 +31,7 @@ const isValidStoryResponse = (data: any): data is ResponseBody => {
     typeof data === 'object' &&
     typeof data.storyName === 'string' &&
     typeof data.chapterTitle === 'string' &&
-    typeof data.content === 'string'
+    typeof data.content === 'string' 
   );
 };
 
@@ -40,7 +42,6 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json' }
     })
   }
-
   try {
     const { characterName, characterType, ageRange, storyId, genre, descriptor } = await req.json() as RequestBody
 
@@ -80,16 +81,17 @@ Deno.serve(async (req) => {
 
     try {
       const parsedStory = JSON.parse(message)
-      
       if (!isValidStoryResponse(parsedStory)) {
         throw new Error('Invalid story response format')
       }
+    
+      const characterDescription = await getCharacterDescription(characterName, parsedStory.content);
 
-      const illustrationUrl = await generateIllustrationUrl(parsedStory.content, 1, storyId);
-
+      const illustrationUrl = await generateIllustrationUrl(parsedStory.content, 1, storyId, characterDescription);
       const storyWithIllustration = {
         ...parsedStory,
-        illustrationUrl: illustrationUrl
+        illustrationUrl: illustrationUrl,
+        characterDescription: characterDescription
       }
       return new Response(JSON.stringify(storyWithIllustration), {
         headers: { 'Content-Type': 'application/json' }
@@ -108,6 +110,7 @@ Deno.serve(async (req) => {
     })
   }
 })
+
 
 /* To invoke locally:
 
