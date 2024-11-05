@@ -7,6 +7,7 @@ export interface Story {
     genre: string;
     createdAt: number;
     title: string;
+    characterDescription: string;
     chapters: Chapter[];
   }
 
@@ -15,5 +16,4 @@ export interface Story {
     number: number;
     title: string;
     illustrationUrl: string;
-    characterDescription: string;
   }

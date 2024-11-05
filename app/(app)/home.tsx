@@ -104,12 +104,13 @@ const Home: React.FC = () => {
         ageRange: selectedAgeRange,
         genre: selectedGenre.name,
         descriptor: selectedDescriptor.name,
+        characterDescription: characterDescription,
         chapters: [{
           content: content,
           number: 1,
           title: chapterTitle,
           illustrationUrl: illustrationUrl,
-          characterDescription: characterDescription
+          
         }],
         createdAt: Date.now()
       };
