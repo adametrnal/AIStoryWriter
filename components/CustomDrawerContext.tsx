@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useStory } from '../context/StoryContext';
 import { router, useGlobalSearchParams } from 'expo-router';
@@ -65,6 +65,11 @@ export function CustomDrawerContent(props: any) {
             style={styles.storyHeader}
             onPress={() => toggleStoryExpanded(story.id)}
           >
+            <Image 
+              source={{ uri: story.chapters[0]?.illustrationUrl }} 
+              style={styles.storyIcon} 
+              resizeMode="cover"
+            />
             <Text style={styles.storyTitle}>{story.title || `${story.characterName}'s Story`}</Text>
             <Ionicons 
               name={expandedStories[story.id] ? 'chevron-down' : 'chevron-forward'} 
@@ -126,6 +131,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     color: '#333',
+  },
+  storyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 5,
+    marginRight: 10
   },
   chapterItem: {
     paddingVertical: 10,

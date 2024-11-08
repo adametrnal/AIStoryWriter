@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
       }
     
       const characterDescription = await getCharacterDescription(characterName, parsedStory.content);
-
       const illustrationUrl = await generateIllustrationUrl(parsedStory.content, 1, storyId, characterDescription);
+
       const storyWithIllustration = {
         ...parsedStory,
         illustrationUrl: illustrationUrl,
