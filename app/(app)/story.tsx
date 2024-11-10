@@ -5,6 +5,7 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { useStory } from '../../context/StoryContext';
 import { saveChapter } from '../../utils/storage';
+import StoryPlayer from '../../components/StoryPlayer';
 
 const StoryResult: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -74,14 +75,16 @@ const StoryResult: React.FC = () => {
         }
       });
             
-      const { content, chapterTitle, illustrationUrl, characterDescription } = await response.data;
+      const { content, chapterTitle, illustrationUrl, audioUrl, characterDescription } = await response.data;
 
       const newChapter = {
         content: content,
         number: nextChapterNumber,
         title: chapterTitle,
         illustrationUrl: illustrationUrl,
+        audioUrl: audioUrl,
       };
+      console.log('New Chapter:', newChapter);
       addChapterToStory(params.storyId, newChapter);
       await saveChapter(params.storyId, newChapter);
 
@@ -111,6 +114,7 @@ const StoryResult: React.FC = () => {
   return (
     <ScrollView style={styles.container} ref={scrollViewRef}>
       <Image source={{ uri: currentChapter?.illustrationUrl }} style={styles.illustration} />
+      {currentChapter && <StoryPlayer chapter={currentChapter} />}
       <Text style={styles.storyText}>{currentChapter?.content}</Text>
       <TouchableOpacity 
         style={styles.generateButton} 

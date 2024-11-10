@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { generateIllustrationUrl } from "../_shared/generate-illustration.ts"
+import { generateAudio } from "../_shared/generate-audio.ts"
 import { ageRangeMapping } from "../_shared/age-range-mapping.ts"
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
@@ -18,6 +19,7 @@ interface ResponseBody {
   chapterTitle: string;
   content: string;
   illustrationUrl: string;
+  audioUrl: string;
 }
 
 const isValidChapterResponse = (data: any): data is ResponseBody => {
@@ -91,9 +93,11 @@ Deno.serve(async (req) => {
       }
 
       const illustrationUrl = await generateIllustrationUrl(parsedChapter.content, nextChapterNumber, storyId, characterDescription);
+      const audioUrl = await generateAudio(parsedChapter.content, nextChapterNumber, storyId);
       const chapterWithIllustration = {
         ...parsedChapter,
         illustrationUrl: illustrationUrl,
+        audioUrl: audioUrl,
         characterDescription: characterDescription
       }
       return new Response(JSON.stringify(chapterWithIllustration), {
