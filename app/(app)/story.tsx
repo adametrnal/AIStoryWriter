@@ -19,6 +19,7 @@ const StoryResult: React.FC = () => {
 
   const { stories, addChapterToStory } = useStory();
   const [isLoading, setIsLoading] = useState(false);
+  const [currentWordIndex, setCurrentWordIndex] = useState(-1);
 
   const currentStory = stories.find(story => story.id === params.storyId);
   const currentChapterNumber = parseInt(params.chapterNumber);
@@ -75,7 +76,7 @@ const StoryResult: React.FC = () => {
         }
       });
             
-      const { content, chapterTitle, illustrationUrl, audioUrl, characterDescription } = await response.data;
+      const { content, chapterTitle, illustrationUrl, audioUrl, timestampsUrl, characterDescription } = await response.data;
 
       const newChapter = {
         content: content,
@@ -83,6 +84,7 @@ const StoryResult: React.FC = () => {
         title: chapterTitle,
         illustrationUrl: illustrationUrl,
         audioUrl: audioUrl,
+        timestampsUrl: timestampsUrl,
       };
       console.log('New Chapter:', newChapter);
       addChapterToStory(params.storyId, newChapter);
@@ -103,6 +105,51 @@ const StoryResult: React.FC = () => {
     }
   };
 
+  const renderStoryText = () => {
+    if (!currentChapter?.content) return null;
+    
+    // Split on newlines first, then handle words
+    const paragraphs = currentChapter.content.split('\n');
+    let wordIndex = 0;
+    
+    return (
+      <Text style={styles.storyText}>
+        {paragraphs.map((paragraph, pIndex) => {
+          // Split paragraph into words and filter empty strings
+          const words = paragraph
+            .split(' ')
+            .filter(word => word.length > 0);
+          
+          // Create an array of word elements for this paragraph
+          const wordElements = words.map((word, wIndex) => {
+            const isHighlighted = wordIndex === currentWordIndex;
+            wordIndex++; // Increment for next word
+            
+            return (
+              <Text
+                key={`${pIndex}-${wIndex}`}
+                style={[
+                  
+                  isHighlighted && styles.highlightedWord
+                ]}
+              >
+                {word}{' '}
+              </Text>
+            );
+          });
+          
+          // Add paragraph break if not the last paragraph
+          return (
+            <Text key={`p-${pIndex}`}>
+              {wordElements}
+              {pIndex < paragraphs.length - 1 && '\n'}
+            </Text>
+          );
+        })}
+      </Text>
+    );
+  };
+
   if (!currentStory || !currentChapter) {
     return (
       <View style={styles.container}>
@@ -114,8 +161,13 @@ const StoryResult: React.FC = () => {
   return (
     <ScrollView style={styles.container} ref={scrollViewRef}>
       <Image source={{ uri: currentChapter?.illustrationUrl }} style={styles.illustration} />
-      {currentChapter && <StoryPlayer chapter={currentChapter} />}
-      <Text style={styles.storyText}>{currentChapter?.content}</Text>
+      {currentChapter && (
+        <StoryPlayer 
+          chapter={currentChapter} 
+          onWordIndexChange={setCurrentWordIndex}
+        />
+      )}
+      {renderStoryText()}
       <TouchableOpacity 
         style={styles.generateButton} 
         onPress={handleNextChapterAction}
@@ -169,7 +221,12 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     marginBottom: 20,
     borderRadius: 8
-  }
+  },
+  highlightedWord: {
+    backgroundColor: '#ffeb3b',
+    borderRadius: 4,
+    padding: 2,
+  },
 });
 
 export default StoryResult;

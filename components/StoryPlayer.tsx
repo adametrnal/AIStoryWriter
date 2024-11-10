@@ -15,16 +15,24 @@ const BAR_SPACING = 2;
 const TOTAL_PADDING = 30 + 56 + 30; // container padding + button width + margins
 const NUM_BARS = Math.floor((SCREEN_WIDTH - TOTAL_PADDING) / (BAR_WIDTH + BAR_SPACING));
 
-interface StoryPlayerProps {
-  chapter: Chapter;
-  isEnabled?: boolean;
+interface Word {
+    word: string;
+    start: number;
+    end: number;
 }
 
-const StoryPlayer: React.FC<StoryPlayerProps> = ({ chapter, isEnabled = true }) => {
+export interface StoryPlayerProps {
+  chapter: Chapter;
+  isEnabled?: boolean;
+  onWordIndexChange: (index: number) => void;
+}
+
+const StoryPlayer: React.FC<StoryPlayerProps> = ({ chapter, isEnabled = true, onWordIndexChange }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
+  const [words, setWords] = useState<Word[]>([]);
   const ttsService = TTSService.getInstance();
 
   useEffect(() => {
@@ -39,6 +47,15 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ chapter, isEnabled = true }) 
       ttsService.cleanup();
     };
   }, [chapter, isEnabled]);
+
+  useEffect(() => {
+    if (chapter.timestampsUrl) {
+      fetch(chapter.timestampsUrl)
+        .then(res => res.json())
+        .then(setWords)
+        .catch(console.error);
+    }
+  }, [chapter]);
 
   const loadAudio = async () => {
     setIsLoading(true);
@@ -58,7 +75,17 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ chapter, isEnabled = true }) 
   const updatePosition = async () => {
     const status = await ttsService.getStatus();
     if (status?.isLoaded) {
-      setPosition(status.positionMillis || 0);
+      const currentTime = status.positionMillis / 1000; // Convert to seconds
+      const wordIndex = words.findIndex(word => {
+        const effectiveEnd = word.start === word.end 
+          ? word.start + 0.2 
+          : word.end + 0.1;
+        return currentTime >= word.start && currentTime <= effectiveEnd;
+      });
+    //   console.log('Current time:', currentTime);
+    //   console.log('Current word index:', wordIndex);  // Debug log
+      onWordIndexChange(wordIndex);
+      setPosition(status.positionMillis);
     }
   };
 

@@ -17,4 +17,5 @@ export interface Story {
     title: string;
     illustrationUrl: string;
     audioUrl: string;
+    timestampsUrl: string;
   }

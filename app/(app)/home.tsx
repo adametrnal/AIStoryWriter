@@ -94,7 +94,7 @@ const Home: React.FC = () => {
         }
       });
             
-      const { storyName, chapterTitle, content, illustrationUrl, characterDescription, audioUrl } = await response.data;
+      const { storyName, chapterTitle, content, illustrationUrl, characterDescription, audioUrl, timestampsUrl } = await response.data;
               
       const newStory:Story = {
         id: storyId,
@@ -111,6 +111,7 @@ const Home: React.FC = () => {
           title: chapterTitle,
           illustrationUrl: illustrationUrl,
           audioUrl: audioUrl,
+          timestampsUrl: timestampsUrl,
         }],
         createdAt: Date.now()
       };

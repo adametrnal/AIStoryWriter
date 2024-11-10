@@ -89,13 +89,14 @@ Deno.serve(async (req) => {
     
       const characterDescription = await getCharacterDescription(characterName, parsedStory.content);
       const illustrationUrl = await generateIllustrationUrl(parsedStory.content, 1, storyId, characterDescription);
-      const audioUrl = await generateAudio(parsedStory.content, 1, storyId);
+      const {audioUrl, timestampsUrl} = await generateAudio(parsedStory.content, 1, storyId);
 
       console.log("Audio URL", audioUrl);
       const storyWithIllustration = {
         ...parsedStory,
         illustrationUrl: illustrationUrl,
         audioUrl: audioUrl,
+        timestampsUrl: timestampsUrl,
         characterDescription: characterDescription
       }
       return new Response(JSON.stringify(storyWithIllustration), {
