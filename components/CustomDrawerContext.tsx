@@ -5,6 +5,7 @@ import { useStory } from '../context/StoryContext';
 import { router, useGlobalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+
 export function CustomDrawerContent(props: any) {
   const { stories } = useStory();
   const [expandedStories, setExpandedStories] = useState<Record<string, boolean>>({});
@@ -100,6 +101,13 @@ export function CustomDrawerContent(props: any) {
           ))}
         </View>
       ))}
+      <TouchableOpacity 
+        style={styles.settingsLink}
+        onPress={() => router.push('/settings')}
+      >
+        <Ionicons name="settings-outline" size={24} color="#666" />
+        <Text style={styles.settingsText}>Settings</Text>
+      </TouchableOpacity>
     </DrawerContentScrollView>
   );
 }
@@ -152,5 +160,17 @@ const styles = StyleSheet.create({
   activeChapterText: {
     color: '#007AFF',
     fontWeight: 'bold',
+  },
+  settingsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  settingsText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#666',
   },
 });

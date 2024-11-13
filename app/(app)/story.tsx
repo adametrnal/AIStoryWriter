@@ -1,11 +1,14 @@
 import React, { useState, useRef,useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { useStory } from '../../context/StoryContext';
 import { saveChapter } from '../../utils/storage';
 import StoryPlayer from '../../components/StoryPlayer';
+import { useSettings } from '../../components/Settings';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const StoryResult: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -20,7 +23,9 @@ const StoryResult: React.FC = () => {
   const { stories, addChapterToStory } = useStory();
   const [isLoading, setIsLoading] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
-
+  const [showAudio, setShowAudio] = useState(true);
+  const [showHighlighting, setShowHighlighting] = useState(true);
+  const { settings } = useSettings();
   const currentStory = stories.find(story => story.id === params.storyId);
   const currentChapterNumber = parseInt(params.chapterNumber);
   const currentChapter = currentStory?.chapters.find(
@@ -34,6 +39,27 @@ const StoryResult: React.FC = () => {
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   }, [currentChapter]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkSettings = async () => {
+        try {
+          //Todo: use useSettings hook. I tried using the Settings hook but it was always getting stale values so I had to use AsyncStorage directly.
+          const savedSettings = await AsyncStorage.getItem('settings');
+          if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            console.log('Fresh settings loaded:', settings);
+            setShowAudio(settings.audioEnabled);
+            setShowHighlighting(settings.highlightingEnabled);
+          }
+        } catch (error) {
+          console.error('Error loading settings:', error);
+        }
+      };
+
+      checkSettings();
+    }, []) 
+  );
 
   const handleNextChapterAction = async () => {
     if (isLastChapter) {
@@ -106,6 +132,7 @@ const StoryResult: React.FC = () => {
   };
 
   const renderStoryText = () => {
+    console.log('7. settings during Story render:', settings);
     if (!currentChapter?.content) return null;
     
     // Split on newlines first, then handle words
@@ -121,6 +148,7 @@ const StoryResult: React.FC = () => {
             .filter(word => word.length > 0);
           
           // Create an array of word elements for this paragraph
+          console.log('showHighlighting', showHighlighting);
           const wordElements = words.map((word, wIndex) => {
             const isHighlighted = wordIndex === currentWordIndex;
             wordIndex++; // Increment for next word
@@ -129,8 +157,7 @@ const StoryResult: React.FC = () => {
               <Text
                 key={`${pIndex}-${wIndex}`}
                 style={[
-                  
-                  isHighlighted && styles.highlightedWord
+                  showHighlighting && isHighlighted && styles.highlightedWord
                 ]}
               >
                 {word}{' '}
@@ -161,7 +188,7 @@ const StoryResult: React.FC = () => {
   return (
     <ScrollView style={styles.container} ref={scrollViewRef}>
       <Image source={{ uri: currentChapter?.illustrationUrl }} style={styles.illustration} />
-      {currentChapter && (
+      {currentChapter && showAudio && (
         <StoryPlayer 
           chapter={currentChapter} 
           onWordIndexChange={setCurrentWordIndex}

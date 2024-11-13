@@ -61,6 +61,12 @@ export default function RootLayout() {
             };
           }}
         />
+        <Drawer.Screen
+          name="(app)/settings"
+          options={{
+            title: "Settings",
+          }}
+        />
       </Drawer>
       </StoryProvider>
     </ThemeProvider>
