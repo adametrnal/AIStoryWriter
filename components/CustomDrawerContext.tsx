@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useStory } from '../context/StoryContext';
 import { router, useGlobalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { authService } from '../app/services/authService';
 
 
 export function CustomDrawerContent(props: any) {
   const { stories } = useStory();
   const [expandedStories, setExpandedStories] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const params = useGlobalSearchParams();
   const currentStoryId = params.storyId as string;
@@ -46,6 +49,19 @@ export function CustomDrawerContent(props: any) {
 
   const navigateToHome = () => {
     router.push('/home');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      await authService.signOut();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'An error occurred while signing out');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const sortedStories = stories
@@ -108,6 +124,24 @@ export function CustomDrawerContent(props: any) {
         <Ionicons name="settings-outline" size={24} color="#666" />
         <Text style={styles.settingsText}>Settings</Text>
       </TouchableOpacity>
+      <View style={styles.signOutContainer}>
+        {error && <Text style={styles.error}>{error}</Text>}
+        
+        <TouchableOpacity 
+          onPress={handleSignOut}
+          style={styles.signOutButton}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#ff4444" />
+          ) : (
+            <>
+              <Ionicons name="log-out-outline" size={24}  />
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
     </DrawerContentScrollView>
   );
 }
@@ -172,5 +206,28 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     color: '#666',
+  },
+  signOutContainer: {
+    padding: 16,
+    // borderTopWidth: 1,
+    borderBottomWidth: 1,
+    // borderTopColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    
+  },
+  signOutButton: {
+    padding: 1,
+    flexDirection: 'row',
+    alignItems: 'center', 
+    gap: 10
+  },
+  signOutText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  error: {
+    color: '#ff4444',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });

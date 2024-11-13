@@ -1,11 +1,10 @@
-import { Audio } from 'expo-av';
 import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
 import { TTSService } from '../app/services/ttsService';
 import { Chapter } from '../types/story';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const WAVEFORM_HEIGHT = 40;
