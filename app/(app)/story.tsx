@@ -7,8 +7,6 @@ import { useStory } from '../../context/StoryContext';
 import { saveChapter } from '../../utils/storage';
 import StoryPlayer from '../../components/StoryPlayer';
 import { useSettings } from '../../components/Settings';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 const StoryResult: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -44,14 +42,10 @@ const StoryResult: React.FC = () => {
     React.useCallback(() => {
       const checkSettings = async () => {
         try {
-          //Todo: use useSettings hook. I tried using the Settings hook but it was always getting stale values so I had to use AsyncStorage directly.
-          const savedSettings = await AsyncStorage.getItem('settings');
-          if (savedSettings) {
-            const settings = JSON.parse(savedSettings);
-            console.log('Fresh settings loaded:', settings);
+          
             setShowAudio(settings.audioEnabled);
             setShowHighlighting(settings.highlightingEnabled);
-          }
+          
         } catch (error) {
           console.error('Error loading settings:', error);
         }
