@@ -1,11 +1,24 @@
 import { ImageBackground, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ThemeProvider } from "@react-navigation/native";
 import { ThemedView } from "@/components/ThemedView";
-import { ThemedText } from '@/components/ThemedText';
 import { Link } from "expo-router";
+import { useEffect, useState } from "react";
+import { useAuth } from "./services/authService";
+import { router } from "expo-router";
 
 export default function InitScreen() {
+  const { session } = useAuth();
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+
+  useEffect(() => {
+    if (session) {
+      router.push('/home');
+    } else {
+      setIsCheckingSession(false);
+    }
+  }, [session]);
+
   return (
     <SafeAreaProvider>
       <ImageBackground
@@ -13,11 +26,12 @@ export default function InitScreen() {
         style={styles.backgroundImage}
       >
         <ThemedView style={styles.container}>
-          {/* <ThemedText style={styles.title} type="title">Welcome to AI Storyteller!</ThemedText> */}
-          <View style={styles.buttonContainer}>
-            <Link style={styles.titleButton} href="/signup">Sign Up</Link>
+          {!isCheckingSession && (
+            <View style={styles.buttonContainer}>
+              <Link style={styles.titleButton} href="/signup">Sign Up</Link>
             <Link style={styles.titleButton} href="/login">Log In</Link>
-          </View>
+            </View>
+          )}
         </ThemedView>
       </ImageBackground>
     </SafeAreaProvider>
