@@ -1,12 +1,12 @@
-import React, { useState, useRef,useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { useStory } from '../../context/StoryContext';
-import { saveChapter } from '../../utils/storage';
 import StoryPlayer from '../../components/StoryPlayer';
 import { useSettings } from '../../components/Settings';
+import { useAuth } from '../../app/services/authService'; 
 
 const StoryResult: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -19,7 +19,7 @@ const StoryResult: React.FC = () => {
   }>();
 
   const { stories, addChapterToStory } = useStory();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [showAudio, setShowAudio] = useState(true);
   const [showHighlighting, setShowHighlighting] = useState(true);
@@ -29,10 +29,17 @@ const StoryResult: React.FC = () => {
   const currentChapter = currentStory?.chapters.find(
     ch => ch.number === currentChapterNumber
   );
+  const { session } = useAuth();
 
   const isLastChapter = currentStory
     ? currentChapterNumber === currentStory.chapters.length
     : true;
+
+  useEffect(() => {
+    if (currentStory && currentChapter) {
+      setIsLoading(false);
+    }
+  }, [currentStory, currentChapter]);
 
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -81,10 +88,11 @@ const StoryResult: React.FC = () => {
         characterName: params.characterName,
         characterType: params.characterType,
         ageRange: params.ageRange,
-        characterDescription: currentStory?.characterDescription,
+        characterDescription: currentStory?.character_description,
         previousChapters: currentStory.chapters.map(ch => ch.content),
         nextChapterNumber,
-        storyId: params.storyId
+        storyId: params.storyId,
+        userId: session?.user?.id
       };
 
       const fullURL = `${Constants.expoConfig?.extra?.functionsUrl}generate-chapter`;
@@ -96,19 +104,9 @@ const StoryResult: React.FC = () => {
         }
       });
             
-      const { content, chapterTitle, illustrationUrl, audioUrl, timestampsUrl, characterDescription } = await response.data;
+      const { chapter } = response.data;
 
-      const newChapter = {
-        content: content,
-        number: nextChapterNumber,
-        title: chapterTitle,
-        illustrationUrl: illustrationUrl,
-        audioUrl: audioUrl,
-        timestampsUrl: timestampsUrl,
-      };
-      console.log('New Chapter:', newChapter);
-      addChapterToStory(params.storyId, newChapter);
-      await saveChapter(params.storyId, newChapter);
+      addChapterToStory(params.storyId, chapter);
 
       router.push({
         pathname: '/story',
@@ -171,6 +169,7 @@ const StoryResult: React.FC = () => {
     );
   };
 
+
   if (!currentStory || !currentChapter) {
     return (
       <View style={styles.container}>
@@ -181,7 +180,7 @@ const StoryResult: React.FC = () => {
 
   return (
     <ScrollView style={styles.container} ref={scrollViewRef}>
-      <Image source={{ uri: currentChapter?.illustrationUrl }} style={styles.illustration} />
+      <Image source={{ uri: currentChapter?.illustration_url }} style={styles.illustration} />
       {currentChapter && showAudio && (
         <StoryPlayer 
           chapter={currentChapter} 

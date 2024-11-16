@@ -2,6 +2,12 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { generateIllustrationUrl } from "../_shared/generate-illustration.ts"
 import { generateAudio } from "../_shared/generate-audio.ts"
 import { ageRangeMapping } from "../_shared/age-range-mapping.ts"
+import { createClient } from "npm:@supabase/supabase-js"
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 
@@ -13,6 +19,7 @@ interface RequestBody {
   storyId: string;
   previousChapters: string[];
   nextChapterNumber: number;
+  userId: string;
 }
 
 interface ResponseBody {
@@ -39,7 +46,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { characterName, characterType, ageRange, characterDescription, storyId, previousChapters, nextChapterNumber } = await req.json() as RequestBody
+    const { 
+      characterName, 
+      characterType, 
+      ageRange, 
+      characterDescription, 
+      storyId, 
+      previousChapters, 
+      nextChapterNumber, 
+      userId 
+    } = await req.json() as RequestBody
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -92,16 +108,39 @@ Deno.serve(async (req) => {
         throw new Error('Invalid chapter response format')
       }
 
-      const illustrationUrl = await generateIllustrationUrl(parsedChapter.content, nextChapterNumber, storyId, characterDescription);
-      const {audioUrl, timestampsUrl} = await generateAudio(parsedChapter.content, nextChapterNumber, storyId);
-      const chapterWithIllustration = {
-        ...parsedChapter,
-        illustrationUrl: illustrationUrl,
-        audioUrl: audioUrl,
-        timestampsUrl: timestampsUrl,
-        characterDescription: characterDescription
+      const illustrationUrl = await generateIllustrationUrl(
+        parsedChapter.content, 
+        nextChapterNumber, 
+        storyId, 
+        characterDescription
+      );
+      const {audioUrl, timestampsUrl} = await generateAudio(
+        parsedChapter.content, 
+        nextChapterNumber, 
+        storyId
+      );
+
+
+      const { data: chapterData, error: chapterError } = await supabase
+        .from('chapters')
+        .insert({
+          story_id: storyId,
+          content: parsedChapter.content,
+          number: nextChapterNumber,
+          title: parsedChapter.chapterTitle,
+          illustration_url: illustrationUrl,
+          audio_url: audioUrl,
+          timestamps_url: timestampsUrl,
+          user_id: userId
+        })
+        .select()
+        .single();
+
+      if (chapterError) {
+        console.error("Failed to insert chapter:", chapterError);
+        throw chapterError;
       }
-      return new Response(JSON.stringify(chapterWithIllustration), {
+      return new Response(JSON.stringify({chapter: chapterData}), {
         headers: { 'Content-Type': 'application/json' }
       })
     } catch (error) {

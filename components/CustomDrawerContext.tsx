@@ -5,6 +5,7 @@ import { useStory } from '../context/StoryContext';
 import { router, useGlobalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { authService } from '../app/services/authService';
+import { Story, Chapter } from '../types/story';
 
 
 export function CustomDrawerContent(props: any) {
@@ -64,8 +65,9 @@ export function CustomDrawerContent(props: any) {
     }
   };
 
-  const sortedStories = stories
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const sortedStories = [...stories]
+    .filter((story): story is Story & { created_at: number, id: string } => story.created_at !== undefined && story.id !== undefined)
+    .sort((a, b) => b.created_at - a.created_at);
 
   return (
     <DrawerContentScrollView {...props}>
@@ -83,11 +85,11 @@ export function CustomDrawerContent(props: any) {
             onPress={() => toggleStoryExpanded(story.id)}
           >
             <Image 
-              source={{ uri: story.chapters[0]?.illustrationUrl }} 
+              source={{ uri: story.chapters[0]?.illustration_url }} 
               style={styles.storyIcon} 
               resizeMode="cover"
             />
-            <Text style={styles.storyTitle}>{story.title || `${story.characterName}'s Story`}</Text>
+            <Text style={styles.storyTitle}>{story.title || `${story.character_name}'s Story`}</Text>
             <Ionicons 
               name={expandedStories[story.id] ? 'chevron-down' : 'chevron-forward'} 
               size={20} 

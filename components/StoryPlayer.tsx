@@ -48,8 +48,8 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ chapter, isEnabled = true, on
   }, [chapter, isEnabled]);
 
   useEffect(() => {
-    if (chapter.timestampsUrl) {
-      fetch(chapter.timestampsUrl)
+    if (chapter.timestamps_url) {
+      fetch(chapter.timestamps_url)
         .then(res => res.json())
         .then(setWords)
         .catch(console.error);
@@ -106,7 +106,7 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ chapter, isEnabled = true, on
   // Generate random heights for waveform (you could make this more sophisticated)
   const waveformBars = Array.from({ length: NUM_BARS }, () => Math.random() * WAVEFORM_HEIGHT);
 
-  if (!isEnabled || !chapter.audioUrl) return null;
+  if (!isEnabled || !chapter.audio_url) return null;
 
   return (
     <View style={styles.container}>

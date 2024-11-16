@@ -36,15 +36,15 @@ export class TTSService {
         this.isLoaded = false;
       }
 
-      if (!chapter.audioUrl) {
+      if (!chapter.audio_url) {
         throw new Error('No audio URL found');
       }
 
-      console.log('Attempting to load audio from URL:', chapter.audioUrl);
+      console.log('Attempting to load audio from URL:', chapter.audio_url);
 
       // Create new audio instance
       const { sound, status } = await Audio.Sound.createAsync(
-        { uri: chapter.audioUrl },
+        { uri: chapter.audio_url },
         { shouldPlay: false },
         this.onPlaybackStatusUpdate
       );

@@ -6,8 +6,14 @@ import { generateIllustrationUrl } from "../_shared/generate-illustration.ts"
 import { generateAudio } from "../_shared/generate-audio.ts"
 import { ageRangeMapping } from "../_shared/age-range-mapping.ts"
 import { getCharacterDescription } from "../_shared/generate-character-description.ts"
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+import { createClient } from "npm:@supabase/supabase-js"
 
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 interface RequestBody {
   storyId: string;
@@ -16,6 +22,7 @@ interface RequestBody {
   ageRange: string;
   genre: string;
   descriptor: string;
+  userId: string;
 }
 
 interface ResponseBody {
@@ -45,7 +52,8 @@ Deno.serve(async (req) => {
     })
   }
   try {
-    const { characterName, characterType, ageRange, storyId, genre, descriptor } = await req.json() as RequestBody
+    const { characterName, characterType, ageRange, storyId, genre, descriptor, userId } = await req.json() as RequestBody
+    console.log("userId", userId);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -86,22 +94,62 @@ Deno.serve(async (req) => {
       if (!isValidStoryResponse(parsedStory)) {
         throw new Error('Invalid story response format')
       }
-    
+
       const characterDescription = await getCharacterDescription(characterName, parsedStory.content);
       const illustrationUrl = await generateIllustrationUrl(parsedStory.content, 1, storyId, characterDescription);
       const {audioUrl, timestampsUrl} = await generateAudio(parsedStory.content, 1, storyId);
+      // Save the story to the database // First, create the story
+      const { data: storyData, error: storyDBError } = await supabase
+      .from('stories')
+      .insert({
+        title: parsedStory.storyName,
+        character_name: characterName,
+        character_type: characterType,
+        character_description: characterDescription,
+        age_range: ageRange,
+        genre: genre,
+        descriptor: descriptor,
+        user_id: userId
+      })
+      .select()
+      .single();
 
-      console.log("Audio URL", audioUrl);
-      const storyWithIllustration = {
-        ...parsedStory,
-        illustrationUrl: illustrationUrl,
-        audioUrl: audioUrl,
-        timestampsUrl: timestampsUrl,
-        characterDescription: characterDescription
+      // After the insert
+      if (storyDBError) {
+        console.error("Failed to insert story:", storyDBError);
+        throw storyDBError;
+      } else {
+        console.log("Successfully inserted story:", storyData);
       }
-      return new Response(JSON.stringify(storyWithIllustration), {
+
+       // Then create the chapter
+      const { data: chapterData, error: chapterDBError } = await supabase
+      .from('chapters')
+      .insert({
+        story_id: storyData.id,
+        content: parsedStory.content,
+        number: 1,
+        title: parsedStory.chapterTitle,
+        illustration_url: illustrationUrl,
+        audio_url: audioUrl,
+        timestamps_url: timestampsUrl,
+        user_id: userId
+      })
+      .select()
+      .single();
+
+       // After the insert
+       if (chapterDBError) {
+        console.error("Failed to insert chapter:", chapterDBError);
+        throw chapterDBError;
+      } else {
+        console.log("Successfully inserted chapter:", chapterData);
+      }
+
+      return new Response(JSON.stringify({story: storyData, chapter: chapterData}), {
         headers: { 'Content-Type': 'application/json' }
       })
+
     } catch (error) {
       return new Response(JSON.stringify({ error: 'Failed to parse story response' }), {
         status: 500,

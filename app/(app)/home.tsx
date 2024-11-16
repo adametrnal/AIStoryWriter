@@ -4,9 +4,8 @@ import { router } from 'expo-router';
 import axios  from 'axios';
 import Constants from 'expo-constants';
 import { useStory } from '../../context/StoryContext';
-import { randomUUID } from 'expo-crypto';
-import { saveStory } from '../../utils/storage';
 import { Story } from '../../types/story';
+import { useAuth } from '../services/authService';
 
 //Images for Age Selection
 const ageRangeIcons = {
@@ -58,6 +57,7 @@ const genres: Genre[] = [
 
 const Home: React.FC = () => {
   const { addStory } = useStory();
+  const { session } = useAuth();
   const [characterName, setCharacterName] = useState('');
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null); 
@@ -66,6 +66,11 @@ const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const handleContinue = async () => {
+    if(!session?.user) {
+      alert('Please sign in to create a story');
+      return;
+    }
+
     if (!characterName || !selectedAgeRange || !selectedCharacter || !selectedGenre || !selectedDescriptor) {
       alert('Please fill in all fields');
       return;
@@ -74,15 +79,13 @@ const Home: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const storyId = randomUUID();
-
       const requestBody = {
-        storyId,
         characterName,
         characterType: selectedCharacter.name,
         ageRange: selectedAgeRange,
         genre: selectedGenre.name,
-        descriptor: selectedDescriptor.name
+        descriptor: selectedDescriptor.name,
+        userId: session.user.id
       };
 
       const fullURL = `${Constants.expoConfig?.extra?.functionsUrl}generate-story`;
@@ -94,44 +97,24 @@ const Home: React.FC = () => {
         }
       });
             
-      const { storyName, chapterTitle, content, illustrationUrl, characterDescription, audioUrl, timestampsUrl } = await response.data;
-              
-      const newStory:Story = {
-        id: storyId,
-        title: storyName,
-        characterName: characterName,
-        characterType: selectedCharacter.name,
-        ageRange: selectedAgeRange,
-        genre: selectedGenre.name,
-        descriptor: selectedDescriptor.name,
-        characterDescription: characterDescription,
-        chapters: [{
-          content: content,
-          number: 1,
-          title: chapterTitle,
-          illustrationUrl: illustrationUrl,
-          audioUrl: audioUrl,
-          timestampsUrl: timestampsUrl,
-        }],
-        createdAt: Date.now()
-      };
-      console.log('New Story:', newStory);
-      addStory(newStory);
+      const { story, chapter } = response.data;
 
-      await saveStory(newStory);
+      const newStory:Story = {
+        ...story,
+        chapters: [chapter]
+      }
+          
+      addStory(newStory);
 
       router.push({
         pathname: '/story',
         params: { 
-            storyId: newStory.id,
+            storyId: story.id,
             chapterNumber: 1,
-            characterName: characterName,
+            characterName,
             ageRange: selectedAgeRange,
             character: selectedCharacter.name,
-            characterType: selectedCharacter.name,
-            genre: selectedGenre.name,
-            descriptor: selectedDescriptor.name,
-            title: storyName
+            characterType: selectedCharacter.name,     
         }
       });
        

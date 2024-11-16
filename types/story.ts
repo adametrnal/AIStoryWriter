@@ -1,21 +1,26 @@
 export interface Story {
-    id: string;
-    characterName: string;
-    characterType: string;
+    id?: string;
+    user_id: string;
+    character_name: string;
+    character_type: string;
     descriptor: string;
-    ageRange: string;
+    age_range: string;
     genre: string;
-    createdAt: number;
     title: string;
-    characterDescription: string;
+    character_description: string;
     chapters: Chapter[];
+    created_at?: number;
   }
 
   export interface Chapter {
+    id?: string;
+    user_id?: string;
+    story_id?: string;
     content: string;
     number: number;
     title: string;
-    illustrationUrl: string;
-    audioUrl: string;
-    timestampsUrl: string;
+    illustration_url: string;
+    audio_url: string;
+    timestamps_url: string;
+    created_at?: string;
   }
