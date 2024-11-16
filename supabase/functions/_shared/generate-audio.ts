@@ -1,6 +1,6 @@
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 import { createClient } from "npm:@supabase/supabase-js"
 import OpenAI from "https://deno.land/x/openai@v4.20.1/mod.ts";
@@ -15,7 +15,7 @@ interface WhisperResponse {
   }[];
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const openai = new OpenAI({
     apiKey: Deno.env.get('OPENAI_API_KEY'),
   });

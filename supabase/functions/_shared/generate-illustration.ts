@@ -1,6 +1,6 @@
 const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 import { createClient } from "npm:@supabase/supabase-js"
 import Replicate from "npm:replicate"
@@ -9,7 +9,7 @@ const replicate = new Replicate({
     auth: REPLICATE_API_KEY
   });
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export const generateIllustrationUrl = async (prompt: string, chapterNumber: number, storyId: string, characterDescription: string) => {
     const modelName = "black-forest-labs/flux-schnell";
