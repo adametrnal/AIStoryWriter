@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import supabase from './supabase';
 import { router } from 'expo-router';
 import { Session } from '@supabase/supabase-js';
 import { createContext, useContext } from 'react';
@@ -21,7 +21,7 @@ export const AuthContext = createContext<{
 // Hook to use auth context
 export const useAuth = () => useContext(AuthContext);
 
-export const authService = {
+const authService = {
   async signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -34,3 +34,5 @@ export const authService = {
   // async signUp() {...}
   // async resetPassword() {...}
 };
+
+export default authService;

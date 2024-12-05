@@ -3,7 +3,7 @@ import { Chapter } from '../../types/story';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-export class TTSService {
+class TTSService {
   private static instance: TTSService;
   private audio: Audio.Sound | null = null;
   private currentChapter: Chapter | null = null;
@@ -127,3 +127,7 @@ export class TTSService {
     }
   }
 }
+
+export default TTSService.getInstance();
+
+export { TTSService };

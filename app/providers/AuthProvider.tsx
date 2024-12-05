@@ -1,5 +1,5 @@
 import { AuthContext } from '../services/authService';
-import { supabase } from '../services/supabase';
+import supabase from '../services/supabase';
 import { Session } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 
@@ -26,3 +26,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
+
+export default AuthProvider;

@@ -1,8 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js"
 // import { corsHeaders } from "../_shared/cors.ts"
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_URL = Deno.env.get('EXPO_SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('EXPO_SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -43,9 +43,10 @@ console.log("got request for stories");
       }
     )
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ error: message }), 
       { 
         status: 400,
         headers: { 

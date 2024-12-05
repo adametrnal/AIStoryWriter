@@ -4,8 +4,8 @@ import { generateAudio } from "../_shared/generate-audio.ts"
 import { ageRangeMapping } from "../_shared/age-range-mapping.ts"
 import { createClient } from "npm:@supabase/supabase-js"
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_URL = Deno.env.get('EXPO_SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('EXPO_SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 
@@ -29,11 +29,14 @@ interface ResponseBody {
   audioUrl: string;
 }
 
-const isValidChapterResponse = (data: any): data is ResponseBody => {
+const isValidChapterResponse = (data: unknown): data is ResponseBody => {
   return (
+    data !== null &&
     typeof data === 'object' &&
-    typeof data.chapterTitle === 'string' &&
-    typeof data.content === 'string'
+    'chapterTitle' in data &&
+    'content' in data &&
+    typeof (data as ResponseBody).chapterTitle === 'string' &&
+    typeof (data as ResponseBody).content === 'string'
   );
 };
 
@@ -143,16 +146,21 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({chapter: chapterData}), {
         headers: { 'Content-Type': 'application/json' }
       })
-    } catch (error) {
+    } catch (_error) {
       return new Response(JSON.stringify({ error: 'Failed to parse story response' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
     }
-
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+    if (error instanceof Error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    return new Response(JSON.stringify({ error: 'An unknown error occurred' }), {
+      status: 500, 
       headers: { 'Content-Type': 'application/json' }
     })
   }

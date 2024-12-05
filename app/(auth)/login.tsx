@@ -4,7 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from '@/components/ThemedText';
 import { router } from "expo-router";
-import { supabase } from '../../app/services/supabase';
+import supabase from '../../app/services/supabase';
 import * as WebBrowser from 'expo-web-browser'
 import { makeRedirectUri } from 'expo-auth-session'
 import { TouchableOpacity, Image } from 'react-native'
@@ -22,18 +22,25 @@ export default function LoginScreen() {
     setLoading(true);
     setError(null);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push('/home');
+    try {
+      console.log("Starting sign in attempt...");
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      console.log("Sign in response received", error ? "with error" : "successfully");
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        router.push('/home');
+      }
+    } catch (e) {
+      console.error("Sign in error:", e);
+      setError(e instanceof Error ? e.message : 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   }
 
   async function signInWithApple() {

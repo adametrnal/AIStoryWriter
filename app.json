@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "ai-storyteller",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -37,6 +37,7 @@
         "projectId": "a25695ed-3b67-4367-9da2-c8ef27bf91c0"
       }
     },
-    "owner": "adametrnal"
+    "owner": "adametrnal",
+    "newArchEnabled": true
   }
 }

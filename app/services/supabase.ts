@@ -7,7 +7,14 @@ import Constants from 'expo-constants';
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl
 const supabaseAnonKey = Constants.expoConfig?.extra?.publicSupabaseAnonKey
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+console.log("supabaseUrl", supabaseUrl);
+console.log("supabaseAnonKey", supabaseAnonKey);
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
@@ -20,3 +27,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 supabase.auth.onAuthStateChange((event, session) => {
     console.log(`Supabase auth event: ${event}`, session)
 })
+
+export default supabase;
