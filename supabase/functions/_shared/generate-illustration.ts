@@ -1,6 +1,6 @@
 const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY');
 const SUPABASE_URL = Deno.env.get('EXPO_SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('EXPO_SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 import { createClient } from "npm:@supabase/supabase-js"
 import Replicate from "npm:replicate"

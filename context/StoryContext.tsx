@@ -42,7 +42,8 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const fullURL = `${Constants.expoConfig?.extra?.functionsUrl}get-stories`;
-            console.log("going to request stories");
+            console.log("Attempting to fetch stories from:", fullURL);
+            console.log("Using user ID:", session.user.id);
             const response = await axios.post(fullURL, {
                 userId: session.user.id
             }, {
@@ -57,7 +58,18 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
             const loadedStories = response.data.stories;
             setStories(loadedStories);
           } catch (error) {
-            console.error('Error loading stories:', error);
+            if (axios.isAxiosError(error)) {
+                console.error('Axios Error:', {
+                    message: error.message,
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    responseData: error.response?.data,
+                    requestURL: error.config?.url,
+                    requestHeaders: error.config?.headers
+                });
+            } else {
+                console.error('Unexpected Error:', error);
+            }
           }
     };
   
