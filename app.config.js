@@ -5,7 +5,7 @@ export default {
     name: "AI Storyteller",
     slug: "ai-storyteller",
     version: "0.1.0",
-    icon: "./assets/icon.png",
+    icon: "./assets/images/icon.png",
     ios: {
       bundleIdentifier: "com.brillshire.ai-storyteller",
     },
